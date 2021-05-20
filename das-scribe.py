@@ -97,7 +97,7 @@ class Plan(object):
         dir_list.append(item)
 
     def IterDirs(self):
-        sorted_dirs = sorted(item for item in self._items_by_dir.iteritems())
+        sorted_dirs = sorted(item for item in self._items_by_dir.items())
         for dir_name, items in sorted_dirs:
             mds = [item for item in items if item.ft == FILETYPE_MD]
             if any(mds):
@@ -179,7 +179,7 @@ class Blog(object):
         self._link_prefix = args.link_prefix
 
     def _WriteIndexFile(self, items):
-        index_md_io = StringIO.StringIO()
+        index_md_io = StringIO()
         index_md_io.write('Recent posts\n======\n')
         for (title, item), (path, post_name, _) in items:
             post_link = '%s/%s/%s.html' % (self._link_prefix, path, post_name)
@@ -216,7 +216,7 @@ class Blog(object):
             for item in items:
                 dst_contents = None
                 if item.ft == FILETYPE_MD:
-                    md_io = StringIO.StringIO()
+                    md_io = StringIO()
                     markdown.markdownFromFile(input=item.src.path,
                                               output=md_io)
                     title, dst_contents = self._post_template.Fill(
