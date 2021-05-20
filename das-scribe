@@ -175,17 +175,17 @@ class Blog(object):
                                    extensions=['footnotes'])
     _, index_contents = self._index_template.Fill(index_html)
     index_path = os.path.join(self._output_dir, 'index.html')
-    print 'writing index to %s' % index_path
+    print('writing index to %s' % index_path)
     with open(index_path, 'w') as output_file:
       output_file.write(index_contents)
 
   def Generate(self, dry_run=False):
     plan = self._BuildPlan()
-    print 'From %s, output to %s' % (self._input_dir, self._output_dir)
+    print('From %s, output to %s' % (self._input_dir, self._output_dir))
     all_dirs = list(plan.IterDirs())
     posts = []
     for dir_index, (path, post_name, items) in enumerate(all_dirs):
-      print '  PLAN: for dir %r, post %r' % (path, post_name)
+      print('  PLAN: for dir %r, post %r' % (path, post_name))
       prev_post, next_post = ('%s/index.html' % self._link_prefix,) * 2
       if dir_index:
         prev_post = '%s/%s/%s.html' % (
@@ -196,7 +196,7 @@ class Blog(object):
           self._link_prefix,
           all_dirs[dir_index + 1][0], all_dirs[dir_index + 1][1])
       if not os.path.exists(os.path.join(self._output_dir, path)):
-        print '    creating %s' % path
+        print('    creating %s' % path)
         if not dry_run:
           os.makedirs(os.path.join(self._output_dir, path))
       for item in items:
@@ -207,8 +207,8 @@ class Blog(object):
           title, dst_contents = self._post_template.Fill(
             md_io.getvalue(), next_post=next_post, prev_post=prev_post)
           posts.append((title, item))
-          print '    expanded template %s: %r' % (item.src.path, title)
-        print '    handling %r --> %r' % (item.src.path, item.dst.path)
+          print('    expanded template %s: %r' % (item.src.path, title))
+        print('    handling %r --> %r' % (item.src.path, item.dst.path))
         if not dry_run:
           if dst_contents:
             with open(item.dst.path, 'w') as output_file:
@@ -223,21 +223,21 @@ class Blog(object):
   def _BuildPlan(self):
     plan = Plan()
     for path, _, filenames in os.walk(self._input_dir):
-      print 'in path %s' % path
+      print('in path %s' % path)
       common_prefix = os.path.commonprefix(
         [os.path.abspath(path), self._output_dir])
       if common_prefix == self._output_dir:
-        print '  skipping self'
+        print('  skipping self')
         continue
       if _PathHasDotfiles(path):
-        print '  skipping dotfile'
+        print('  skipping dotfile')
         continue
       path = path[len(self._input_dir) + 1:]
       target_path = os.path.join(self._output_dir, path)
       for filename in filenames:
-        print '  considering %s' % filename
+        print('  considering %s' % filename)
         if filename.startswith('.'):
-          print '    skipping dotfile'
+          print('    skipping dotfile')
           continue
         ext = os.path.splitext(filename)[1]
         input_name = os.path.join(self._input_dir, path, filename)
