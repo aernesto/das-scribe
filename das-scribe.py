@@ -113,7 +113,7 @@ class Plan():
                     folders.append(fpath)
                     break
             folders.reverse()
-            return '/'.join(folders[:2])
+            return '/'.join(folders)
 
         created_str = extract_created_string(src)
         item = Item(ft, src, dst, item_created_str=created_str)
