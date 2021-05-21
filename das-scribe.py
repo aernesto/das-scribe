@@ -135,9 +135,9 @@ class Template(object):
             raise TemplateError(self._path, 'missing {{content}} var')
 
     def _ExtractTitle(self, md_str):
-        class TitleExtractor(HTMLParser.HTMLParser):
+        class TitleExtractor(HTMLParser):
             def __init__(self):
-                HTMLParser.HTMLParser.__init__(self)
+                super().__init__()
                 self._reading = True
                 self._text = []
                 self._tag_stack = []
@@ -231,8 +231,10 @@ class Blog(object):
                     print(item)
                     print()
                     md_io = StringIO()
-                    markdown.markdownFromFile(input=item.src.path,
-                                              output=md_io)
+                    with open(item.src.path, 'rt') as ff:
+                        fcontents = ff.read()
+                    md_io.write(markdown.markdown(fcontents))
+                    #  markdown.markdownFromFile(input=item.src.path, output=md_io)
                     title, dst_contents = self._post_template.Fill(
                         md_io.getvalue(),
                         next_post=next_post,
@@ -250,7 +252,7 @@ class Blog(object):
                         shutil.copy(item.src.path, item.dst.path)
 
         if not dry_run:
-            self._WriteIndexFile(reversed(zip(posts, all_dirs)))
+            self._WriteIndexFile(list(zip(posts, all_dirs))[::-1])
 
     def _BuildPlan(self):
         plan = Plan()
