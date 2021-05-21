@@ -216,6 +216,10 @@ class Blog(object):
             for item in items:
                 dst_contents = None
                 if item.ft == FILETYPE_MD:
+                    print()
+                    print(item.ft)
+                    print(item)
+                    print()
                     md_io = StringIO()
                     markdown.markdownFromFile(input=item.src.path,
                                               output=md_io)
@@ -258,12 +262,16 @@ class Blog(object):
                     print('    skipping dotfile')
                     continue
                 ext = os.path.splitext(filename)[1]
+                print('---')
+                print(os.path.splitext(filename))
+                print('+++')
                 input_name = os.path.join(self._input_dir, path, filename)
                 output_name = os.path.join(target_path, filename)
                 ft = FILETYPE_OTHER
                 if ext == '.md':
                     ft = FILETYPE_MD
                     output_name = '%s.html' % output_name[:-3]
+                print('>>> ', FILETYPE_OTHER, ft)
                 plan.AddItem(ft, input_name, output_name, post_dir=path)
         return plan
 
