@@ -1,4 +1,6 @@
 from html.parser import HTMLParser
+import re
+from pprint import pprint
 from io import StringIO
 import argparse
 import markdown
@@ -7,6 +9,37 @@ import os.path
 import shutil
 import sys
 import time
+
+
+def get_value(fname, startstr, max_row=10, verbose=False):
+    val = ''
+    with open(fname, 'rt') as f:
+        for i, t in enumerate(f):
+            if t.startswith(startstr):
+                val = t[len(startstr):].replace('"', '').strip()
+                break
+            else:
+                if verbose:
+                    print(f'pattern {startstr} not found row {i}: {t.strip()}')
+
+            if i == max_row:
+                break
+    return val
+
+
+def extract_title(mmk: str, startstr: str = 'title: '):
+    print('===========++++++++++===========')
+    print(dir(mmk))
+    print(len(mmk))
+    print(type(mmk))
+    print(mmk[:500])
+    val = ''
+    m = re.search(rf'^.*{startstr}(.*)$', mmk, flags=re.MULTILINE)
+    if m:
+        val = m.group(1).replace('"', '').strip()
+    print(m, val)
+    print('===========----------===========')
+    return val
 
 
 class Error(Exception):
@@ -103,19 +136,12 @@ class Plan():
         self._items_by_dir = {}
 
     def AddItem(self, ft, src, dst, post_dir=None):
-        def extract_created_string(fpath):
-            folders = []
-            while 1:
-                fpath, folder = os.path.split(fpath)
-                if folder != "":
-                    folders.append(folder)
-                elif fpath != "":
-                    folders.append(fpath)
-                    break
-            folders.reverse()
-            return '/'.join(folders)
+        def extract_created_string(fpath, ftype):
+            if ftype == FILETYPE_MD:
+                return get_value(fpath, 'date: ')
+            return ''
 
-        created_str = extract_created_string(src)
+        created_str = extract_created_string(src, ft)
         item = Item(ft, src, dst, item_created_str=created_str)
         self._items.append(item)
 
@@ -153,44 +179,14 @@ class Template():
         if '{{content}}' not in self._contents:
             raise TemplateError(self._path, 'missing {{content}} var')
 
-    def _ExtractTitle(self, md_str):
-        class TitleExtractor(HTMLParser):
-            def __init__(self):
-                super().__init__()
-                self._reading = True
-                self._text = []
-                self._tag_stack = []
-
-            def title(self):
-                return ''.join(self._text)
-
-            def handle_starttag(self, tag, attrs):
-                if self._reading:
-                    self._tag_stack.append(tag)
-
-            def handle_endtag(self, tag):
-                if self._reading:
-                    self._tag_stack.pop()
-                    if not self._tag_stack:
-                        self._reading = False
-
-            def handle_data(self, data):
-                if self._reading:
-                    self._text.append(data)
-
-            def handle_entityref(self, name):
-                if self._reading:
-                    self._text.append('&%s;' % name)
-
-        parser = TitleExtractor()
-        parser.feed(md_str)
-        return parser.title()
-
-    def Fill(self, contents, next_post=None, prev_post=None):
+    def Fill(self,
+             contents: markdown.Markdown,
+             next_post=None,
+             prev_post=None):
         next_post = next_post if next_post else ''
         prev_post = prev_post if prev_post else ''
 
-        title = self._ExtractTitle(contents)
+        title = extract_title(contents)
 
         tmpl = self._contents.replace('{{content}}', contents)
         tmpl = tmpl.replace('{{title}}', title)
@@ -208,6 +204,7 @@ class Blog():
         self._link_prefix = args.link_prefix
 
     def _WriteIndexFile(self, items):
+        #  pprint(items)
         """writes the main index.html file for landing page of blog"""
         index_md_io = StringIO()
         index_md_io.write('Recent posts\n======\n')
@@ -215,6 +212,7 @@ class Blog():
             post_link = '%s/%s/%s.html' % (self._link_prefix, path, post_name)
             index_md_io.write('* %s - [%s](%s)\n' %
                               (item.ctime, title, post_link))
+            print(f'index entry: * {item.ctime} - [{title}]({post_link})')
         index_html = markdown.markdown(index_md_io.getvalue(),
                                        extensions=['footnotes'])
         _, index_contents = self._index_template.Fill(index_html)
