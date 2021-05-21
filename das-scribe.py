@@ -58,6 +58,7 @@ FILETYPE_MD = 2
 
 
 class ItemFile(object):
+    """mainly a class that holds the path to a file"""
     def __init__(self, path):
         self.path = path
         self.mtime = None
@@ -70,10 +71,19 @@ class ItemFile(object):
 
 
 class Item(object):
+    '''Class that holds a file type and its source and destination paths'''
     def __init__(self, ft, src, dst):
         self.ft = ft
         self.src = ItemFile(src)
         self.dst = ItemFile(dst)
+        print('==attrs of Item==')
+        print(ft)
+        print(self.src.path)
+        print(self.dst.path)
+        print('==exit Item verbose==')
+
+    def __repr__(self):
+        return f"ft:{self.ft}\nsrc:{self.src.path}\ndst:{self.dst.path}"
 
     @property
     def ctime(self):
