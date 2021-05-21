@@ -73,23 +73,28 @@ class ItemFile():
 
 class Item():
     '''Class that holds a file type and its source and destination paths'''
-    def __init__(self, ft, src, dst):
+    def __init__(self, ft, src, dst, item_created_str: str = None):
         self.ft = ft
         self.src = ItemFile(src)
         self.dst = ItemFile(dst)
-        print('==attrs of Item==')
-        print(ft)
-        print(self.src.path)
-        print(self.dst.path)
-        print('==exit Item verbose==')
+        self.item_created_str = item_created_str
+
+
+#          print('==attrs of Item==')
+#  print(ft)
+#  print(self.src.path)
+#  print(self.dst.path)
+#          print('==exit Item verbose==')
 
     def __repr__(self):
         return f"ft:{self.ft}\nsrc:{self.src.path}\ndst:{self.dst.path}"
 
     @property
     def ctime(self):
-        # This logic should definitely be fixed.
-        return self.src.ctime or time.time()
+        if self.item_created_str:
+            return self.item_created_str
+        else:
+            return self.src.ctime or time.time()
 
 
 class Plan():
@@ -98,7 +103,20 @@ class Plan():
         self._items_by_dir = {}
 
     def AddItem(self, ft, src, dst, post_dir=None):
-        item = Item(ft, src, dst)
+        def extract_created_string(fpath):
+            folders = []
+            while 1:
+                fpath, folder = os.path.split(fpath)
+                if folder != "":
+                    folders.append(folder)
+                elif fpath != "":
+                    folders.append(fpath)
+                    break
+            folders.reverse()
+            return '/'.join(folders[:2])
+
+        created_str = extract_created_string(src)
+        item = Item(ft, src, dst, item_created_str=created_str)
         self._items.append(item)
 
         dir_list = self._items_by_dir.get(post_dir, None)
@@ -190,12 +208,13 @@ class Blog():
         self._link_prefix = args.link_prefix
 
     def _WriteIndexFile(self, items):
+        """writes the main index.html file for landing page of blog"""
         index_md_io = StringIO()
         index_md_io.write('Recent posts\n======\n')
         for (title, item), (path, post_name, _) in items:
             post_link = '%s/%s/%s.html' % (self._link_prefix, path, post_name)
-            index_md_io.write('* %s - [%s](%s)\n' % (time.strftime(
-                '%d %b %Y', time.gmtime(item.ctime)), title, post_link))
+            index_md_io.write('* %s - [%s](%s)\n' %
+                              (item.ctime, title, post_link))
         index_html = markdown.markdown(index_md_io.getvalue(),
                                        extensions=['footnotes'])
         _, index_contents = self._index_template.Fill(index_html)
