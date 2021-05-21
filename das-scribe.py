@@ -45,6 +45,7 @@ def CreateParser():
 
 
 def _PathHasDotfiles(path):
+    """dot files are hidden files whose name starts with a dot"""
     base, tail = os.path.split(path)
     while tail:
         if tail.startswith('.') and len(tail) > 1:
@@ -57,7 +58,7 @@ FILETYPE_OTHER = 1
 FILETYPE_MD = 2
 
 
-class ItemFile(object):
+class ItemFile():
     """mainly a class that holds the path to a file"""
     def __init__(self, path):
         self.path = path
@@ -70,7 +71,7 @@ class ItemFile(object):
             pass
 
 
-class Item(object):
+class Item():
     '''Class that holds a file type and its source and destination paths'''
     def __init__(self, ft, src, dst):
         self.ft = ft
@@ -91,7 +92,7 @@ class Item(object):
         return self.src.ctime or time.time()
 
 
-class Plan(object):
+class Plan():
     def __init__(self):
         self._items = []
         self._items_by_dir = {}
@@ -120,7 +121,7 @@ class Plan(object):
                 yield dir_name, post_name, items
 
 
-class Template(object):
+class Template():
     def __init__(self, path):
         self._path = path
         try:
@@ -168,8 +169,8 @@ class Template(object):
         return parser.title()
 
     def Fill(self, contents, next_post=None, prev_post=None):
-        next_post = next_post or ''
-        prev_post = prev_post or ''
+        next_post = next_post if next_post else ''
+        prev_post = prev_post if prev_post else ''
 
         title = self._ExtractTitle(contents)
 
@@ -180,7 +181,7 @@ class Template(object):
         return title, tmpl
 
 
-class Blog(object):
+class Blog():
     def __init__(self, args):
         self._input_dir = os.path.abspath(args.input)
         self._output_dir = os.path.abspath(args.output)
@@ -226,10 +227,10 @@ class Blog(object):
             for item in items:
                 dst_contents = None
                 if item.ft == FILETYPE_MD:
-                    print()
-                    print(item.ft)
-                    print(item)
-                    print()
+                    #                      print()
+                    #  print(item.ft)
+                    #  print(item)
+                    #                      print()
                     md_io = StringIO()
                     with open(item.src.path, 'rt') as ff:
                         fcontents = ff.read()
@@ -274,16 +275,16 @@ class Blog(object):
                     print('    skipping dotfile')
                     continue
                 ext = os.path.splitext(filename)[1]
-                print('---')
-                print(os.path.splitext(filename))
-                print('+++')
+                #  print('---')
+                #  print(os.path.splitext(filename))
+                #  print('+++')
                 input_name = os.path.join(self._input_dir, path, filename)
                 output_name = os.path.join(target_path, filename)
                 ft = FILETYPE_OTHER
                 if ext == '.md':
                     ft = FILETYPE_MD
                     output_name = '%s.html' % output_name[:-3]
-                print('>>> ', FILETYPE_OTHER, ft)
+                #  print('>>> ', FILETYPE_OTHER, ft)
                 plan.AddItem(ft, input_name, output_name, post_dir=path)
         return plan
 
